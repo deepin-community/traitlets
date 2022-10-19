@@ -1,0 +1,2 @@
+version=4
+https://github.com/ipython/traitlets/tags .*/([\d\.-]+)\.tar\.gz

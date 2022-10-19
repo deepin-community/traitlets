@@ -1,0 +1,46 @@
+Source: traitlets
+Maintainer: Debian Python Team <team+python@tracker.debian.org>
+Uploaders: Julien Puydt <jpuydt@debian.org>
+Section: python
+Priority: optional
+Standards-Version: 4.6.0
+Homepage: https://github.com/ipython/traitlets
+Build-Depends: bc,
+               debhelper-compat (= 13),
+               dh-python,
+               python3-all,
+               python3-decorator,
+               python3-ipython-genutils,
+               python3-mock,
+               python3-nose,
+               python3-pytest,
+               python3-setuptools,
+               python3-sphinx,
+               python3-sphinx-rtd-theme
+Rules-Requires-Root: no
+Vcs-Git: https://salsa.debian.org/python-team/packages/traitlets.git
+Vcs-Browser: https://salsa.debian.org/python-team/packages/traitlets
+
+Package: python3-traitlets
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}
+Description: Lightweight Traits-like package for Python 3
+ A lightweight pure-Python derivative of Enthought Traits, used
+ for configuring Python objects.
+ .
+ It powers the config system of IPython and Jupyter.
+ .
+ This package contains the library for Python 3.
+
+Package: python-traitlets-doc
+Section: doc
+Architecture: all
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${sphinxdoc:Depends}
+Description: Lightweight Traits-like package for Python
+ A lightweight pure-Python derivative of Enthought Traits, used
+ for configuring Python objects.
+ .
+ It powers the config system of IPython and Jupyter.
+ .
+ This package contains the documentation.

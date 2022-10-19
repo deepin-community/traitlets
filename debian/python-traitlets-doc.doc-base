@@ -1,0 +1,10 @@
+Document: python-traitlets-doc
+Title: Traitlets Documentation
+Author: IPython Development Team
+Abstract: Sphinx documentation for Traitlets
+Section: Programming/Python
+
+Format: HTML
+Index: /usr/share/doc/python-traitlets-doc/html/index.html
+Files: /usr/share/doc/python-traitlets-doc/html/*
+

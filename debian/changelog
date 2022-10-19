@@ -1,0 +1,153 @@
+traitlets (5.1.1-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Drop 0004-Revert-Fix-string-assertion-for-python3.10.patch (upstream).
+  * Drop 0005-FIX-account-for-changes-in-py310.patch (upstream).
+
+ -- Julien Puydt <jpuydt@debian.org>  Fri, 29 Oct 2021 13:37:48 +0200
+
+traitlets (5.1.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Backport upstream commits fe88397 and 9ee33f0, fixing python 3.10 issues
+
+ -- Gordon Ball <gordon@chronitis.net>  Sun, 24 Oct 2021 14:02:16 +0000
+
+traitlets (5.1.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Refresh patches.
+
+ -- Julien Puydt <jpuydt@debian.org>  Wed, 08 Sep 2021 06:38:33 +0200
+
+traitlets (5.0.5-3) unstable; urgency=medium
+
+  * debian/control
+    - use proper team name and email address
+
+ -- Sandro Tosi <morph@debian.org>  Tue, 31 Aug 2021 00:51:38 -0400
+
+traitlets (5.0.5-2) unstable; urgency=medium
+
+  [ Julien Puydt ]
+  * Fix d/watch.
+
+  [ Debian Janitor ]
+  * Update watch file format version to 4.
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+  * Update standards version to 4.5.1, no changes needed.
+
+  [ Julien Puydt ]
+  * Bump standards-version to 4.6.0.
+
+ -- Julien Puydt <jpuydt@debian.org>  Thu, 26 Aug 2021 18:30:52 +0200
+
+traitlets (5.0.5-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Julien Puydt ]
+  * New upstream release.
+
+ -- Julien Puydt <jpuydt@debian.org>  Sat, 17 Oct 2020 09:50:36 +0200
+
+traitlets (5.0.4-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Declare d/rules doesn't require root.
+  * Bump std-vers to 4.5.0.
+  * Ship upstream examples.
+  * Update team mailing list address.
+  * Update d/copyright.
+  * Bump dh-compat to 13.
+
+ -- Julien Puydt <jpuydt@debian.org>  Mon, 07 Sep 2020 17:23:34 +0200
+
+traitlets (4.3.3-3) unstable; urgency=medium
+
+  * Drop python2 support (Closes: #938716)
+
+ -- Gordon Ball <gordon@chronitis.net>  Wed, 01 Apr 2020 20:47:03 +0000
+
+traitlets (4.3.3-2) unstable; urgency=medium
+
+  * Use my debian.org mail address.
+  * Add patch from Chris Lamb to allow reproducible builds (Closes: #942342).
+  * Add patch to remove a warning with Python 3.8 (Closes: #945541).
+
+ -- Julien Puydt <jpuydt@debian.org>  Tue, 17 Dec 2019 07:54:41 +0100
+
+traitlets (4.3.3-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * d/control: Set Vcs-* to salsa.debian.org
+  * d/copyright: Fix Format URL to correct one
+  * d/control: Remove ancient X-Python-Version field
+  * d/control: Remove ancient X-Python3-Version field
+  * Convert git repository from git-dpm to gbp layout
+  * Use debhelper-compat instead of debian/compat.
+
+  [ Gordon Ball ]
+  * New upstream version 4.3.3
+  * Update standards-version to 4.4.1
+  * Update debhelper compat level to 12
+  * Use python3 sphinx to build documentation
+
+ -- Gordon Ball <gordon@chronitis.net>  Thu, 10 Oct 2019 17:52:02 +0000
+
+traitlets (4.3.2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Update debian/watch.
+  * Push standards-version to 4.0.0.
+
+ -- Julien Puydt <julien.puydt@laposte.net>  Mon, 03 Jul 2017 16:35:14 +0200
+
+traitlets (4.3.1-1) unstable; urgency=medium
+
+  * Marked the  -doc package as Multi-Arch:foreign (tracker hint).
+  * Pushed dh compat to 10.
+  * New upstream release.
+  * Added python-enum34, python-pytest, python3-pytest and
+    python-sphinx-rtd-theme to the deps.
+  * Added the upstream changelog to the packages.
+  * Forced dep on python-enum34 for python-traitlets.
+
+ -- Julien Puydt <julien.puydt@laposte.net>  Sun, 02 Oct 2016 15:50:47 +0200
+
+traitlets (4.2.2-2) unstable; urgency=medium
+
+  * Added a patch to intersphinx configuration to disable network
+  access. (Closes: #830628)
+
+ -- Julien Puydt <julien.puydt@laposte.net>  Sun, 10 Jul 2016 08:27:57 +0200
+
+traitlets (4.2.2-1) unstable; urgency=medium
+
+  * New upstream release
+  * Pushed standards-version to 3.9.8
+  * Completed debian/copyright
+
+ -- Julien Puydt <julien.puydt@laposte.net>  Sun, 03 Jul 2016 11:36:13 +0200
+
+traitlets (4.2.1-1) unstable; urgency=medium
+
+  [ Ondřej Nový ]
+  * Fixed VCS URL (https)
+
+  [ Julien Puydt ]
+  * New upstream version
+  * Pushed standards-version to 3.9.7
+  * Added setuptools, decorator and mock as build-dep
+  * Simplified d/rules wrt to tests (let dh magic work)
+
+ -- Julien Puydt <julien.puydt@laposte.net>  Sun, 17 Apr 2016 09:35:01 +0200
+
+traitlets (4.0.0-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #799242)
+
+ -- Julien Puydt <julien.puydt@laposte.net>  Sun, 27 Sep 2015 11:34:37 +0200

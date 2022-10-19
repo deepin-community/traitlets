@@ -1,0 +1,3 @@
+0001-use-setuptools-for-everything-so-python-Depends-work.patch
+0002-Patch-intersphinx-configuration-to-avoid-network-acc.patch
+reproducible_build.patch

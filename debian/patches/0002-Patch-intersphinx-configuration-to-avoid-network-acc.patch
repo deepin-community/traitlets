@@ -1,0 +1,20 @@
+From 0e0f52a17f9a139fb650b6cfbca68cdf8f6fed56 Mon Sep 17 00:00:00 2001
+From: Julien Puydt <julien.puydt@laposte.net>
+Date: Sun, 10 Jul 2016 08:24:44 +0200
+Subject: Patch intersphinx configuration to avoid network access
+
+---
+ docs/source/conf.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- traitlets.orig/docs/source/conf.py
++++ traitlets/docs/source/conf.py
+@@ -315,7 +315,7 @@
+ 
+ 
+ # Example configuration for intersphinx: refer to the Python standard library.
+-intersphinx_mapping = {'https://docs.python.org/': None}
++intersphinx_mapping = {'/usr/share/doc/python-doc/html': None}
+ 
+ # Read The Docs
+ # on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
