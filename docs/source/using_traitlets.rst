@@ -19,7 +19,7 @@ value generation of attributes on :class:`traitlets.HasTraits`
 subclasses:
 
 .. code:: python
-    
+
     from traitlets import HasTraits, Int, Unicode, default
     import getpass
 
@@ -95,13 +95,13 @@ Basic Example: Validating the Parity of a Trait
     from traitlets import HasTraits, TraitError, Int, Bool, validate
 
     class Parity(HasTraits):
-        value = Int()
+        data = Int()
         parity = Int()
 
-        @validate('value')
-        def _valid_value(self, proposal):
+        @validate('data')
+        def _valid_data(self, proposal):
             if proposal['value'] % 2 != self.parity:
-                raise TraitError('value and parity should be consistent')
+                raise TraitError('data and parity should be consistent')
             return proposal['value']
 
         @validate('parity')
@@ -109,15 +109,16 @@ Basic Example: Validating the Parity of a Trait
             parity = proposal['value']
             if parity not in [0, 1]:
                 raise TraitError('parity should be 0 or 1')
-            if self.value % 2 != parity:
-                raise TraitError('value and parity should be consistent')
+            if self.data % 2 != parity:
+                raise TraitError('data and parity should be consistent')
             return proposal['value']
 
-    parity_check = Parity(value=2)
+
+    parity_check = Parity(data=2)
 
     # Changing required parity and value together while holding cross validation
     with parity_check.hold_trait_notifications():
-        parity_check.value = 1
+        parity_check.data = 1
         parity_check.parity = 1
 
 Notice how all of the examples above return
@@ -142,8 +143,8 @@ properties.
 
     class Nested(HasTraits):
 
-        value = Dict(traits={
-            'configuration': Dict(trait=Unicode()),
+        value = Dict(per_key_traits={
+            'configuration': Dict(value_trait=Unicode()),
             'flag': Bool()
         })
 
@@ -192,8 +193,8 @@ external validator:
 Holding Trait Cross-Validation and Notifications
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Sometimes if may be impossible to transition from to valid states for a
-``HasTraits`` instance by change attributes one by one. The
+Sometimes it may be impossible to transition between valid states for a
+``HasTraits`` instance by changing attributes one by one. The
 ``hold_trait_notifications`` context manager can be used to hold the custom
 cross validation until the context manager is released. If a validation error
 occurs, changes are rolled back to the initial state.

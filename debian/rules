@@ -14,4 +14,8 @@ ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
 endif
 
 override_dh_installchangelogs:
-	dh_installchangelogs docs/source/changelog.rst
+	dh_installchangelogs CHANGELOG.md
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -f docs/source/changelog.md

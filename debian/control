@@ -3,18 +3,16 @@ Maintainer: Debian Python Team <team+python@tracker.debian.org>
 Uploaders: Julien Puydt <jpuydt@debian.org>
 Section: python
 Priority: optional
-Standards-Version: 4.6.0
+Standards-Version: 4.6.2
 Homepage: https://github.com/ipython/traitlets
-Build-Depends: bc,
-               debhelper-compat (= 13),
+Build-Depends: debhelper-compat (= 13),
                dh-python,
+               pybuild-plugin-pyproject,
                python3-all,
-               python3-decorator,
-               python3-ipython-genutils,
-               python3-mock,
-               python3-nose,
-               python3-pytest,
-               python3-setuptools,
+               python3-hatchling,
+               python3-myst-parser,
+               python3-pydata-sphinx-theme,
+               python3-pytest <!nocheck>,
                python3-sphinx,
                python3-sphinx-rtd-theme
 Rules-Requires-Root: no
