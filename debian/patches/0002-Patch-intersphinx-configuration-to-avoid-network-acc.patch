@@ -9,12 +9,12 @@ Subject: Patch intersphinx configuration to avoid network access
 
 --- traitlets.orig/docs/source/conf.py
 +++ traitlets/docs/source/conf.py
-@@ -315,7 +315,7 @@
+@@ -320,7 +320,7 @@
  
  
  # Example configuration for intersphinx: refer to the Python standard library.
--intersphinx_mapping = {'https://docs.python.org/': None}
-+intersphinx_mapping = {'/usr/share/doc/python-doc/html': None}
+-intersphinx_mapping = {"https://docs.python.org/": None}
++intersphinx_mapping = {"/usr/share/doc/python-doc/html": None}
  
- # Read The Docs
- # on_rtd is whether we are on readthedocs.org, this line of code grabbed from docs.readthedocs.org
+ 
+ def setup(app):

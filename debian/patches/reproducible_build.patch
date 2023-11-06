@@ -4,7 +4,7 @@ Forwarded: https://github.com/ipython/traitlets/pull/535
 
 --- traitlets.orig/traitlets/traitlets.py
 +++ traitlets/traitlets/traitlets.py
-@@ -2357,6 +2357,9 @@
+@@ -2565,6 +2565,9 @@
      def info_rst(self):
          return self._info(as_rst=True)
  

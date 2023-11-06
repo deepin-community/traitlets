@@ -3,3 +3,4 @@ Bug-Database: https://github.com/ipython/traitlets/issues
 Bug-Submit: https://github.com/ipython/traitlets/issues/new
 Repository: https://github.com/ipython/traitlets.git
 Repository-Browse: https://github.com/ipython/traitlets
+Security-Contact: https://github.com/ipython/traitlets/tree/HEAD/SECURITY.md
