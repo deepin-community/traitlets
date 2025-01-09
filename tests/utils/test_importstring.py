@@ -4,11 +4,12 @@
 # Adapted from enthought.traits, Copyright (c) Enthought, Inc.,
 # also under the terms of the Modified BSD License.
 """Tests for traitlets.utils.importstring."""
+from __future__ import annotations
 
 import os
 from unittest import TestCase
 
-from ..importstring import import_item
+from traitlets.utils.importstring import import_item
 
 
 class TestImportItem(TestCase):
@@ -23,4 +24,4 @@ class TestImportItem(TestCase):
 
         msg = "import_item accepts strings, not '%s'." % NotAString
         with self.assertRaisesRegex(TypeError, msg):
-            import_item(NotAString())
+            import_item(NotAString())  # type:ignore[arg-type]

@@ -4,6 +4,7 @@ Tests for traitlets.config.application.Application
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import contextlib
 import io
@@ -11,33 +12,23 @@ import json
 import logging
 import os
 import sys
+import typing as t
 from io import StringIO
 from tempfile import TemporaryDirectory
-from unittest import TestCase
+from unittest import TestCase, mock
 
 import pytest
-from pytest import mark
 
 from traitlets import Bool, Bytes, Dict, HasTraits, Integer, List, Set, Tuple, Unicode
 from traitlets.config.application import Application
 from traitlets.config.configurable import Configurable
-from traitlets.config.loader import Config
-from traitlets.tests.utils import (
-    check_help_all_output,
-    check_help_output,
-    get_output_error_code,
-)
-
-try:
-    from unittest import mock
-except ImportError:
-    from unittest import mock
+from traitlets.config.loader import Config, KVArgParseConfigLoader
+from traitlets.tests.utils import check_help_all_output, check_help_output, get_output_error_code
 
 pjoin = os.path.join
 
 
 class Foo(Configurable):
-
     i = Integer(
         0,
         help="""
@@ -54,7 +45,6 @@ class Foo(Configurable):
 
 
 class Bar(Configurable):
-
     b = Integer(0, help="The integer b.").tag(config=True)
     enabled = Bool(True, help="Enable bar.").tag(config=True)
     tb = Tuple(()).tag(config=True, multiplicity="*")
@@ -65,10 +55,9 @@ class Bar(Configurable):
 
 
 class MyApp(Application):
-
     name = Unicode("myapp")
     running = Bool(False, help="Is the app running?").tag(config=True)
-    classes = List([Bar, Foo])
+    classes = List([Bar, Foo])  # type:ignore
     config_file = Unicode("", help="Load this config file").tag(config=True)
 
     warn_tpyo = Unicode(
@@ -77,7 +66,7 @@ class MyApp(Application):
         help="Should print a warning if `MyApp.warn-typo=...` command is passed",
     )
 
-    aliases = {}
+    aliases: t.Dict[t.Any, t.Any] = {}
     aliases.update(Application.aliases)
     aliases.update(
         {
@@ -94,7 +83,7 @@ class MyApp(Application):
         }
     )
 
-    flags = {}
+    flags: t.Dict[t.Any, t.Any] = {}
     flags.update(Application.flags)
     flags.update(
         {
@@ -137,8 +126,12 @@ class TestApplication(TestCase):
         app = MyApp()
         self.assertEqual(app.name, "myapp")
         self.assertEqual(app.running, False)
-        self.assertEqual(app.classes, [MyApp, Bar, Foo])
+        self.assertEqual(app.classes, [MyApp, Bar, Foo])  # type:ignore
         self.assertEqual(app.config_file, "")
+
+    def test_app_name_set_via_constructor(self):
+        app = MyApp(name="set_via_constructor")
+        assert app.name == "set_via_constructor"
 
     def test_mro_discovery(self):
         app = MyApp()
@@ -401,6 +394,30 @@ class TestApplication(TestCase):
         self.assertIn("Equivalent to: [--Foo.j]", hmsg)
         self.assertIn("Equivalent to: [--Foo.name]", hmsg)
 
+    def test_alias_unrecognized(self):
+        """Check ability to override handling for unrecognized aliases"""
+
+        class StrictLoader(KVArgParseConfigLoader):
+            def _handle_unrecognized_alias(self, arg):
+                self.parser.error("Unrecognized alias: %s" % arg)
+
+        class StrictApplication(Application):
+            def _create_loader(self, argv, aliases, flags, classes):
+                return StrictLoader(argv, aliases, flags, classes=classes, log=self.log)
+
+        app = StrictApplication()
+        app.initialize(["--log-level=20"])  # recognized alias
+        assert app.log_level == 20
+
+        app = StrictApplication()
+        with pytest.raises(SystemExit, match="2"):
+            app.initialize(["--unrecognized=20"])
+
+        # Ideally we would use pytest capsys fixture, but fixtures are incompatible
+        # with unittest.TestCase-style classes :(
+        # stderr = capsys.readouterr().err
+        # assert "Unrecognized alias: unrecognized" in stderr
+
     def test_flag_clobber(self):
         """test that setting flags doesn't clobber existing settings"""
         app = MyApp()
@@ -450,7 +467,6 @@ class TestApplication(TestCase):
         self.assertEqual(app.config.MyApp.log_level, "CRITICAL")
 
     def test_extra_args(self):
-
         app = MyApp()
         app.parse_command_line(["--Bar.b=5", "extra", "args", "--disable"])
         app.init_bar()
@@ -495,7 +511,7 @@ class TestApplication(TestCase):
             pass
 
         app = MyApp()
-        app.classes.append(NoTraits)
+        app.classes.append(NoTraits)  # type:ignore
 
         conf_txt = app.generate_config_file()
         print(conf_txt)
@@ -535,7 +551,7 @@ class TestApplication(TestCase):
                 app.init_bar()
                 self.assertEqual(app.bar.b, 1)
 
-    @mark.skipif(not hasattr(TestCase, "assertLogs"), reason="requires TestCase.assertLogs")
+    @pytest.mark.skipif(not hasattr(TestCase, "assertLogs"), reason="requires TestCase.assertLogs")
     def test_log_collisions(self):
         app = MyApp()
         app.log = logging.getLogger()
@@ -556,7 +572,7 @@ class TestApplication(TestCase):
         assert pjoin(td, name + ".py") in output
         assert pjoin(td, name + ".json") in output
 
-    @mark.skipif(not hasattr(TestCase, "assertLogs"), reason="requires TestCase.assertLogs")
+    @pytest.mark.skipif(not hasattr(TestCase, "assertLogs"), reason="requires TestCase.assertLogs")
     def test_log_bad_config(self):
         app = MyApp()
         app.log = logging.getLogger()
@@ -580,7 +596,7 @@ class TestApplication(TestCase):
             with self.assertRaises(SyntaxError):
                 app.load_config_file(name, path=[td])
 
-    def test_subcommands_instanciation(self):
+    def test_subcommands_instantiation(self):
         """Try all ways to specify how to create sub-apps."""
         app = Root.instance()
         app.parse_command_line(["sub1"])
@@ -612,6 +628,9 @@ class TestApplication(TestCase):
         self.assertIs(app.subapp.parent, app)
         self.assertIs(app.subapp.subapp.parent, app.subapp)  # Set by factory.
 
+        Root.clear_instance()
+        Sub1.clear_instance()
+
     def test_loaded_config_files(self):
         app = MyApp()
         app.log = logging.getLogger()
@@ -639,9 +658,9 @@ class TestApplication(TestCase):
 
             # Attempt to update, ensure error...
             with self.assertRaises(AttributeError):
-                app.loaded_config_files = "/foo"
+                app.loaded_config_files = "/foo"  # type:ignore
 
-            # ensure it can't be udpated via append
+            # ensure it can't be updated via append
             app.loaded_config_files.append("/bar")
             self.assertEqual(len(app.loaded_config_files), 1)
 
@@ -670,7 +689,7 @@ def test_cli_multi_scalar(caplog):
 
 class Root(Application):
     subcommands = {
-        "sub1": ("traitlets.config.tests.test_application.Sub1", "import string"),
+        "sub1": ("tests.config.test_application.Sub1", "import string"),
     }
 
 
@@ -683,7 +702,7 @@ class Sub2(Application):
 
 
 class Sub1(Application):
-    subcommands = {
+    subcommands: dict = {  # type:ignore
         "sub2": (Sub2, "Application class"),
         "sub3": (lambda root: Sub3(parent=root, flag=True), "factory"),
     }
@@ -835,7 +854,7 @@ def test_get_default_logging_config_pythonw(monkeypatch):
     assert "loggers" in config
 
 
-@pytest.fixture
+@pytest.fixture()
 def caplogconfig(monkeypatch):
     """Capture logging config events for DictConfigurator objects.
 

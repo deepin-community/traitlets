@@ -2,15 +2,15 @@ Description: allow reproducible builds in projects using traitlets
 Author: Chris Lamb
 Forwarded: https://github.com/ipython/traitlets/pull/535
 
---- traitlets.orig/traitlets/traitlets.py
-+++ traitlets/traitlets/traitlets.py
-@@ -2565,6 +2565,9 @@
-     def info_rst(self):
-         return self._info(as_rst=True)
+--- a/traitlets/traitlets.py
++++ b/traitlets/traitlets.py
+@@ -2554,6 +2554,9 @@
+     def subclass_init(self, cls: type[t.Any]) -> None:
+         pass  # fully opt out of instance_init
  
 +    def make_dynamic_default(self):
 +        # Ensure value is sorted for a reproducible build
 +        return sorted(super(Set, self).make_dynamic_default())
  
- class FuzzyEnum(Enum):
-     """An case-ignoring enum matching choices by unique prefixes/substrings."""
+ def _validate_bounds(
+     trait: Int[t.Any, t.Any] | Float[t.Any, t.Any], obj: t.Any, value: t.Any

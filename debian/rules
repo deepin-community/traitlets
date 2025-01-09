@@ -5,17 +5,24 @@ export PYBUILD_NAME=traitlets
 export LC_ALL=C.UTF-8
 
 %:
-	dh $@ --with python3,sphinxdoc --buildsystem=pybuild
+	dh $@ --with sphinxdoc --buildsystem=pybuild
 
-override_dh_sphinxdoc:
-ifeq (,$(findstring nodocs, $(DEB_BUILD_OPTIONS)))
-	PYTHONPATH=. python3 -m sphinx -b html docs/source debian/python-traitlets-doc/usr/share/doc/python-traitlets-doc/html
-	dh_sphinxdoc -O--buildsystem=pybuild
+ifeq (,$(findstring nodoc, $(DEB_BUILD_OPTIONS)))
+execute_after_dh_auto_build:
+	PYTHONPATH=$$(pwd) make -C docs html
 endif
 
-override_dh_installchangelogs:
-	dh_installchangelogs CHANGELOG.md
+override_dh_installdocs:
+	dh_installdocs -ppython-traitlets-doc --doc-main-package=python3-traitlets
+	dh_installdocs --remaining-packages
 
-override_dh_auto_clean:
-	dh_auto_clean
-	rm -f docs/source/changelog.md
+override_dh_installexamples:
+	dh_installexamples -ppython-traitlets-doc --doc-main-package=python3-traitlets
+	dh_installexamples --remaining-packages
+
+override_dh_compress:
+	dh_compress -ppython-traitlets-doc -X.ttf -X.eot
+	dh_compress --remaining-packages
+
+execute_after_dh_auto_clean:
+	rm -rf docs/build docs/source/changelog.md

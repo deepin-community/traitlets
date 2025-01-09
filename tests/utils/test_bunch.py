@@ -1,4 +1,6 @@
-from ..bunch import Bunch
+from __future__ import annotations
+
+from traitlets.utils.bunch import Bunch
 
 
 def test_bunch():

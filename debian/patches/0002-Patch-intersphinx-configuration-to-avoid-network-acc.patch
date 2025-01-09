@@ -7,14 +7,14 @@ Subject: Patch intersphinx configuration to avoid network access
  docs/source/conf.py | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
---- traitlets.orig/docs/source/conf.py
-+++ traitlets/docs/source/conf.py
-@@ -320,7 +320,7 @@
+--- a/docs/source/conf.py
++++ b/docs/source/conf.py
+@@ -312,7 +312,7 @@
  
  
  # Example configuration for intersphinx: refer to the Python standard library.
--intersphinx_mapping = {"https://docs.python.org/": None}
-+intersphinx_mapping = {"/usr/share/doc/python-doc/html": None}
+-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
++intersphinx_mapping = {"python": ("/usr/share/doc/python3-doc/html", None)}
  
  
  def setup(app):

@@ -1,2 +1,4 @@
 version=4
-https://github.com/ipython/traitlets/tags .*/([\d\.-]+)\.tar\.gz
+opts="filenamemangle=s%.*/@ANY_VERSION@%@PACKAGE@-$1.tar.gz%,searchmode=plain" \
+    https://api.github.com/repos/ipython/traitlets/tags?per_page=100 \
+    https://api.github.com/repos/ipython/traitlets/tarball/refs/tags/@ANY_VERSION@
