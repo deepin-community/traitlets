@@ -2,18 +2,16 @@
 
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
 
 import logging
 from unittest import TestCase
 
-from pytest import mark
+import pytest
 
+from tests._warnings import expected_warnings
 from traitlets.config.application import Application
-from traitlets.config.configurable import (
-    Configurable,
-    LoggingConfigurable,
-    SingletonConfigurable,
-)
+from traitlets.config.configurable import Configurable, LoggingConfigurable, SingletonConfigurable
 from traitlets.config.loader import Config
 from traitlets.log import get_logger
 from traitlets.traitlets import (
@@ -26,11 +24,9 @@ from traitlets.traitlets import (
     List,
     Set,
     Unicode,
-    _deprecations_shown,
     validate,
 )
-
-from ...tests._warnings import expected_warnings
+from traitlets.utils.warnings import _deprecations_shown
 
 
 class MyConfigurable(Configurable):
@@ -677,7 +673,7 @@ class TestLogger(TestCase):
         bar = Integer(config=True)
         baz = Integer(config=True)
 
-    @mark.skipif(not hasattr(TestCase, "assertLogs"), reason="requires TestCase.assertLogs")
+    @pytest.mark.skipif(not hasattr(TestCase, "assertLogs"), reason="requires TestCase.assertLogs")
     def test_warn_match(self):
         logger = logging.getLogger("test_warn_match")
         cfg = Config({"A": {"bat": 5}})

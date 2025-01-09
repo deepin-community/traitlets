@@ -3,9 +3,12 @@ A simple utility to import something by its string name.
 """
 # Copyright (c) IPython Development Team.
 # Distributed under the terms of the Modified BSD License.
+from __future__ import annotations
+
+from typing import Any
 
 
-def import_item(name):
+def import_item(name: str) -> Any:
     """Import and return ``bar`` given the string ``foo.bar``.
 
     Calling ``bar = import_item("foo.bar")`` is the functional equivalent of
@@ -30,8 +33,8 @@ def import_item(name):
         module = __import__(package, fromlist=[obj])
         try:
             pak = getattr(module, obj)
-        except AttributeError:
-            raise ImportError("No module named %s" % obj)
+        except AttributeError as e:
+            raise ImportError("No module named %s" % obj) from e
         return pak
     else:
         # called with un-dotted string

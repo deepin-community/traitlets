@@ -2,6 +2,7 @@
 """
 Test the trait-type ``UseEnum``.
 """
+from __future__ import annotations
 
 import enum
 import unittest
@@ -51,7 +52,7 @@ class TestUseEnum(unittest.TestCase):
 
     def test_assign_all_enum_values(self):
         # pylint: disable=no-member
-        enum_values = [value for value in Color.__members__.values()]
+        enum_values = list(Color.__members__.values())
         for value in enum_values:
             self.assertIsInstance(value, Color)
             example = self.Example()
@@ -80,7 +81,7 @@ class TestUseEnum(unittest.TestCase):
             enum_value = Color.__members__.get(value)
             example.color = value
             self.assertIs(example.color, enum_value)
-            self.assertEqual(example.color.name, value)
+            self.assertEqual(example.color.name, value)  # type:ignore
 
     def test_assign_scoped_enum_value_name(self):
         # -- CONVERT: string => Enum value (item)
@@ -115,7 +116,7 @@ class TestUseEnum(unittest.TestCase):
             example = self.Example()
             example.color = value
             self.assertIsInstance(example.color, Color)
-            self.assertEqual(example.color.value, value)
+            self.assertEqual(example.color.value, value)  # type:ignore
 
     def test_assign_bad_enum_value_number__raises_error(self):
         # -- CONVERT: number => Enum value (item)
@@ -280,7 +281,7 @@ class TestFuzzyEnum(unittest.TestCase):
 
         example = FuzzyExample()
         for color in color_choices:
-            for wlen in range(0, 2):
+            for wlen in range(2):
                 value = color[wlen:]
 
                 example.color = value

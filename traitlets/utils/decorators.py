@@ -1,17 +1,22 @@
 """Useful decorators for Traitlets users."""
+from __future__ import annotations
 
 import copy
 from inspect import Parameter, Signature, signature
+from typing import Any, Type, TypeVar
 
-from ..traitlets import Undefined
+from ..traitlets import HasTraits, Undefined
 
 
-def _get_default(value):
+def _get_default(value: Any) -> Any:
     """Get default argument value, given the trait default value."""
     return Parameter.empty if value == Undefined else value
 
 
-def signature_has_traits(cls):
+T = TypeVar("T", bound=HasTraits)
+
+
+def signature_has_traits(cls: Type[T]) -> Type[T]:
     """Return a decorated class with a constructor signature that contain Trait names as kwargs."""
     traits = [
         (name, _get_default(value.default_value))
@@ -51,9 +56,7 @@ def signature_has_traits(cls):
     # because it can't accept traits as keyword arguments
     if old_var_keyword_parameter is None:
         raise RuntimeError(
-            "The {} constructor does not take **kwargs, which means that the signature can not be expanded with trait names".format(
-                cls
-            )
+            f"The {cls} constructor does not take **kwargs, which means that the signature can not be expanded with trait names"
         )
 
     new_parameters = []
@@ -78,6 +81,6 @@ def signature_has_traits(cls):
     # Append **kwargs
     new_parameters.append(old_var_keyword_parameter)
 
-    cls.__signature__ = Signature(new_parameters)
+    cls.__signature__ = Signature(new_parameters)  # type:ignore[attr-defined]
 
     return cls

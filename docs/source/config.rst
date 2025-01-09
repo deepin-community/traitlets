@@ -24,11 +24,12 @@ Configuration object: :class:`~traitlets.config.Config`
 Application: :class:`~traitlets.config.Application`
     An application is a process that does a specific job. The most obvious
     application is the :command:`ipython` command line program. Each
-    application reads *one or more* configuration files and a single set of
+    application may read configuration files and a single set of
     command line options
     and then produces a master configuration object for the application. This
     configuration object is then passed to the configurable objects that the
-    application creates. These configurable objects implement the actual logic
+    application creates, usually either via the `config` or `parent` constructor
+    arguments. These configurable objects implement the actual logic
     of the application and know how to configure themselves given the
     configuration object.
 
@@ -50,14 +51,16 @@ Configurable: :class:`~traitlets.config.Configurable`
     Developers create :class:`~traitlets.config.Configurable`
     subclasses that implement all of the logic in the application. Each of
     these subclasses has its own configuration information that controls how
-    instances are created.
+    instances are created. When constructing a :class:`~traitlets.config.Configurable`,
+    the `config` or `parent` arguments can be passed to the constructor (respectively
+    a :class:`~traitlets.config.Config` and a Configurable object with a ``.config``).
 
 Singletons: :class:`~traitlets.config.SingletonConfigurable`
     Any object for which there is a single canonical instance. These are
     just like Configurables, except they have a class method
     :meth:`~traitlets.config.SingletonConfigurable.instance`,
     that returns the current active instance (or creates one if it
-    does not exist). :class:`~traitlets.config.Application`s is a singleton.
+    does not exist). :class:`~traitlets.config.Application` is a singleton.
     This lets
     objects easily connect to the current running Application without passing
     objects around everywhere.  For instance, to get the current running
@@ -87,14 +90,19 @@ Configuration objects and files
 
 A configuration object is little more than a wrapper around a dictionary.
 A configuration *file* is simply a mechanism for producing that object.
-The main IPython configuration file is a plain Python script,
-which can perform extensive logic to populate the config object.
-IPython 2.0 introduces a JSON configuration file,
-which is just a direct JSON serialization of the config dictionary,
-which is easily processed by external software.
-
+Configuration files currently can be a plain Python script or a JSON file.
+The former has the benefit that it can perform extensive logic to populate
+the config object, while the latter is just a direct JSON serialization of
+the config dictionary and can be easily processed by external software.
 When both Python and JSON configuration file are present, both will be loaded,
 with JSON configuration having higher priority.
+
+The configuration files can be loaded by calling :meth:`Application.load_config_file()`,
+which takes the relative path to the config file (with or without file extension)
+and the directories in which to search for the config file. All found configuration
+files will be loaded in reverse order, so that configs in earlier directories will
+have higher priority.
+
 
 Python configuration Files
 --------------------------
@@ -119,28 +127,30 @@ subclass
     from traitlets.config.configurable import Configurable
     from traitlets import Int, Float, Unicode, Bool
 
-    class MyClass(Configurable):
-        name = Unicode('defaultname'
-            help="the name of the object"
-        ).tag(config=True)
+
+    class School(Configurable):
+        name = Unicode("defaultname", help="the name of the object").tag(config=True)
         ranking = Integer(0, help="the class's ranking").tag(config=True)
         value = Float(99.0)
         # The rest of the class implementation would go here..
 
-In this example, we see that :class:`MyClass` has three attributes, two
+
+    # Construct from config via School(config=..)
+
+In this example, we see that :class:`School` has three attributes, two
 of which (``name``, ``ranking``) can be configured.  All of the attributes
-are given types and default values.  If a :class:`MyClass` is instantiated,
+are given types and default values.  If a :class:`School` is instantiated,
 but not configured, these default values will be used.  But let's see how
 to configure this class in a configuration file
 
 .. code-block:: python
 
     # Sample config file
-    c.MyClass.name = 'coolname'
-    c.MyClass.ranking = 10
+    c.School.name = "coolname"
+    c.School.ranking = 10
 
 After this configuration file is loaded, the values set in it will override
-the class defaults anytime a :class:`MyClass` is created.  Furthermore,
+the class defaults anytime a :class:`School` is created.  Furthermore,
 these attributes will be type checked and validated anytime they are set.
 This type checking is handled by the :mod:`traitlets` module,
 which provides the :class:`~traitlets.Unicode`, :class:`~traitlets.Integer` and
@@ -159,7 +169,7 @@ attribute of ``c`` is not the actual class, but instead is another
 
 .. note::
 
-    The careful reader may wonder how the ``ClassName`` (``MyClass`` in
+    The careful reader may wonder how the ``ClassName`` (``School`` in
     the above example) attribute of the configuration object ``c`` gets
     created. These attributes are created on the fly by the
     :class:`~traitlets.config.Config` instance, using a simple naming
@@ -180,10 +190,10 @@ but with a .json extension.
 Configuration described in previous section could be written as follows in a
 JSON configuration file:
 
-.. sourcecode:: json
+.. code-block:: json
 
     {
-      "MyClass": {
+      "School": {
         "name": "coolname",
         "ranking": 10
       }
@@ -204,61 +214,75 @@ Let's say you want to have different configuration files for various purposes.
 Our configuration system makes it easy for one configuration file to inherit
 the information in another configuration file. The :func:`load_subconfig`
 command can be used in a configuration file for this purpose. Here is a simple
-example that loads all of the values from the file :file:`base_config.py`::
+example that loads all of the values from the file :file:`base_config.py`:
 
-    # base_config.py
-    c = get_config()
-    c.MyClass.name = 'coolname'
-    c.MyClass.ranking = 100
+.. code-block:: python
+    :caption: examples/docs/configs/base_config.py
 
-into the configuration file :file:`main_config.py`::
+    c = get_config()  # noqa
+    c.School.name = "Harvard"
+    c.School.ranking = 100
 
-    # main_config.py
-    c = get_config()
+into the configuration file :file:`main_config.py`:
+
+.. code-block:: python
+    :caption: examples/docs/configs/main_config.py
+    :emphasize-lines: 4
+
+    c = get_config()  # noqa
 
     # Load everything from base_config.py
-    load_subconfig('base_config.py')
+    load_subconfig("base_config.py")  # noqa
 
     # Now override one of the values
-    c.MyClass.name = 'bettername'
+    c.School.name = "bettername"
 
 In a situation like this the :func:`load_subconfig` makes sure that the
 search path for sub-configuration files is inherited from that of the parent.
 Thus, you can typically put the two in the same directory and everything will
-just work.
-
+just work. An example app using these configuration files can be found at
+`examples/docs/load_config_app.py <https://github.com/ipython/traitlets/blob/main/examples/docs/load_config_app.py>`__.
 
 Class based configuration inheritance
 =====================================
 
 There is another aspect of configuration where inheritance comes into play.
 Sometimes, your classes will have an inheritance hierarchy that you want
-to be reflected in the configuration system.  Here is a simple example::
+to be reflected in the configuration system.  Here is a simple example:
 
-    from traitlets.config.configurable import Configurable
+.. code-block:: python
+
+    from traitlets.config import Application, Configurable
     from traitlets import Integer, Float, Unicode, Bool
 
+
     class Foo(Configurable):
-        name = Unicode('fooname', config=True)
+        name = Unicode("fooname", config=True)
         value = Float(100.0, config=True)
 
+
     class Bar(Foo):
-        name = Unicode('barname', config=True)
+        name = Unicode("barname", config=True)
         othervalue = Int(0, config=True)
 
+
+    # construct Bar(config=..)
+
 Now, we can create a configuration file to configure instances of :class:`Foo`
-and :class:`Bar`::
+and :class:`Bar`:
+
+.. code-block:: python
 
     # config file
-    c = get_config()
+    c = get_config()  # noqa
 
-    c.Foo.name = 'bestname'
+    c.Foo.name = "bestname"
     c.Bar.othervalue = 10
 
 This class hierarchy and configuration file accomplishes the following:
 
 * The default value for :attr:`Foo.name` and :attr:`Bar.name` will be
-  'bestname'.  Because :class:`Bar` is a :class:`Foo` subclass it also
+  ``'bestname'``.  Because :class:`Bar` is a :class:`Foo` subclass it also
   picks up the configuration information for :class:`Foo`.
 * The default value for :attr:`Foo.value` and :attr:`Bar.value` will be
   ``100.0``, which is the value specified as the class default.
@@ -273,11 +297,31 @@ Command-line arguments
 ======================
 
 All configurable options can also be supplied at the command line when launching
-the application. Applications use a parser called
-:class:`~traitlets.config.loader.KVArgParseConfigLoader` to load values into a Config
-object.
+the application. Internally, when :meth:`Application.initialize()` is called,
+a :class:`~traitlets.config.loader.KVArgParseConfigLoader` instance is constructed
+to load values into a :class:`~traitlets.config.Config` object. (For advanced users,
+this can be overridden in the helper method :meth:`Application._create_loader()`.)
 
-By default, values are assigned in much the same way as in a config file:
+Most command-line scripts simply need to call :meth:`Application.launch_instance()`,
+which will create the Application singleton, parse the command-line arguments, and
+start the application:
+
+.. code-block:: python
+    :emphasize-lines: 8
+
+    from traitlets.config import Application
+
+
+    class MyApp(Application):
+        def start(self):
+            pass  # app logic goes here
+
+
+    if __name__ == "__main__":
+        MyApp.launch_instance()
+
+By default, config values are assigned from command-line arguments in much the
+same way as in a config file:
 
 .. code-block:: bash
 
@@ -285,12 +329,46 @@ By default, values are assigned in much the same way as in a config file:
 
 is the same as adding:
 
-.. sourcecode:: python
+.. code-block:: python
 
     c.InteractiveShell.autoindent = False
-    c.BaseIPythonApplication.profile = 'myprofile'
+    c.BaseIPythonApplication.profile = "myprofile"
 
-to your configuration file.
+to your configuration file. Command-line arguments take precedence over
+values read from configuration files. (This is done in
+:meth:`Application.load_config_file()` by merging ``Application.cli_config``
+over values read from configuration files.)
+
+Note that even though :class:`Application` is a :class:`SingletonConfigurable`, multiple
+applications could still be started and called from each other by constructing
+them as one would with any other :class:`Configurable`:
+
+.. code-block:: python
+    :caption: examples/docs/multiple_apps.py
+    :emphasize-lines: 11,12,13
+
+    from traitlets.config import Application
+
+
+    class OtherApp(Application):
+        def start(self):
+            print("other")
+
+
+    class MyApp(Application):
+        classes = [OtherApp]
+
+        def start(self):
+            # similar to OtherApp.launch_instance(), but without singleton
+            self.other_app = OtherApp(config=self.config)
+            self.other_app.initialize(["--OtherApp.log_level", "INFO"])
+            self.other_app.start()
+
+
+    if __name__ == "__main__":
+        MyApp.launch_instance()
+
+
 
 .. versionchanged:: 5.0
 
@@ -329,10 +407,9 @@ to your configuration file.
 
 .. note::
 
-    Any error in configuration files which lead to this configuration
-    file will be ignored by default. Application subclasses may specify
-    `raise_config_file_errors = True` to exit on failure to load config files,
-    instead of the default of logging the failures.
+    By default, an error in a configuration file will cause the configuration
+    file to be ignored and a warning logged. Application subclasses may specify
+    `raise_config_file_errors = True` to exit on failure to load config files instead.
 
 .. versionadded:: 4.3
 
@@ -376,6 +453,34 @@ to specify the whole class name:
 
 When specifying ``alias`` dictionary in code, the values might be the strings
 like ``'Class.trait'`` or two-tuples like ``('Class.trait', "Some help message")``.
+For example:
+
+.. code-block:: python
+    :caption: examples/docs/aliases.py
+    :emphasize-lines: 11,12
+
+    from traitlets import Bool
+    from traitlets.config import Application, Configurable
+
+
+    class Foo(Configurable):
+        enabled = Bool(False, help="whether enabled").tag(config=True)
+
+
+    class App(Application):
+        classes = [Foo]
+        dry_run = Bool(False, help="dry run test").tag(config=True)
+        aliases = {
+            "dry-run": "App.dry_run",
+            ("f", "foo-enabled"): ("Foo.enabled", "whether foo is enabled"),
+        }
+
+
+    if __name__ == "__main__":
+        App.launch_instance()
+
+By default, the ``--log-level`` alias will be set up for ``Application.log_level``.
+
 
 Flags
 *****
@@ -400,6 +505,50 @@ For instance:
     # is equivalent to
     $ ipython --TerminalIPythonApp.display_banner=False
 
+And a runnable code example:
+
+.. code-block:: python
+    :caption: examples/docs/flags.py
+    :emphasize-lines: 11,12,13,14,15,16,17
+
+    from traitlets import Bool
+    from traitlets.config import Application, Configurable
+
+
+    class Foo(Configurable):
+        enabled = Bool(False, help="whether enabled").tag(config=True)
+
+
+    class App(Application):
+        classes = [Foo]
+        dry_run = Bool(False, help="dry run test").tag(config=True)
+        flags = {
+            "dry-run": ({"App": {"dry_run": True}}, dry_run.help),
+            ("f", "enable-foo"): (
+                {
+                    "Foo": {"enabled": True},
+                },
+                "Enable foo",
+            ),
+            ("disable-foo"): (
+                {
+                    "Foo": {"enabled": False},
+                },
+                "Disable foo",
+            ),
+        }
+
+
+    if __name__ == "__main__":
+        App.launch_instance()
+
+Since flags are a bit more complicated to set up, there are a couple of common patterns
+implemented in helper methods. For example, :func:`traitlets.config.boolean_flag()` sets
+up the flags ``--x`` and ``--no-x``. By default, the following few flags are set up:
+``--debug`` (setting ``log_level=DEBUG``), ``--show-config``, and ``--show-config-json``
+(print config to stdout and exit).
+
+
 Subcommands
 -----------
 
@@ -414,8 +563,9 @@ after :command:`git`, and are called with the form :command:`command subcommand
 
 .. currentmodule::  traitlets.config
 
-Subcommands are specified as a dictionary on :class:`~traitlets.config.Application`
-instances, mapping *subcommand names* to two-tuples containing these:
+Subcommands are specified as a dictionary assigned to a ``subcommands`` class member
+of :class:`~traitlets.config.Application` instances. This dictionary maps
+*subcommand names* to two-tuples containing these:
 
 1. A subclass of :class:`Application` to handle the subcommand.
    This can be specified as:
@@ -429,17 +579,89 @@ instances, mapping *subcommand names* to two-tuples containing these:
 
      .. note::
         The return value of the factory above is an *instance*, not a class,
-        son the :meth:`SingletonConfigurable.instance()` is not invoked
+        so the :meth:`SingletonConfigurable.instance()` is not invoked
         in this case.
 
-   In all cases, the instanciated app is stored in :attr:`Application.subapp`
+   In all cases, the instantiated app is stored in :attr:`Application.subapp`
    and its :meth:`Application.initialize()` is invoked.
 
 2. A short description of the subcommand for use in help output.
 
+For example (refer to ``examples/subcommands_app.py`` for a more complete example):
+
+.. code-block:: python
+    :caption: examples/docs/subcommands.py
+    :emphasize-lines: 14,15
+
+    from traitlets.config import Application
+
+
+    class SubApp1(Application):
+        pass
+
+
+    class SubApp2(Application):
+        @classmethod
+        def get_subapp_instance(cls, app: Application) -> Application:
+            app.clear_instance()  # since Application is singleton, need to clear main app
+            return cls.instance(parent=app)
+
+
+    class MainApp(Application):
+        subcommands = {
+            "subapp1": (SubApp1, "First subapp"),
+            "subapp2": (SubApp2.get_subapp_instance, "Second subapp"),
+        }
+
+
+    if __name__ == "__main__":
+        MainApp.launch_instance()
+
+
 To see a list of the available aliases, flags, and subcommands for a configurable
-application, simply pass ``-h`` or ``--help``. And to see the full list of
+application, simply pass ``-h`` or ``--help``. To see the full list of
 configurable options (*very* long), pass ``--help-all``.
+
+For more complete examples
+of setting up :class:`~traitlets.config.Application`, refer to the
+`application examples <https://github.com/ipython/traitlets/tree/main/examples>`__.
+
+
+Other ``Application`` members
+-----------------------------
+
+The following are typically set as class variables of :class:`~traitlets.config.Application`
+subclasses, but can also be set as instance variables.
+
+* ``.classes``: A list of :class:`~traitlets.config.Configurable` classes. Similar to configs,
+  any class name can be used in ``--Class.trait=value`` arguments, including classes that the
+  :class:`~traitlets.config.Application` might not know about. However, the
+  ``--help-all`` menu will only enumerate ``config`` traits of classes in ``Application.classes``.
+  Similarly, ``.classes`` is used in other places where an application wants to list all
+  configurable traits; examples include :meth:`Application.generate_config_file()`
+  and the :ref:`argcomplete` handling.
+
+* ``.name``, ``.description``, ``.option_description``, ``.keyvalue_description``,
+  ``.subcommand_description``, ``.examples``, ``.version``: Various strings used in the ``--help``
+  menu and other messages
+
+* ``.log_level``, ``.log_datefmt``, ``.log_format``, ``.logging_config``: Configurable options
+  to control application logging, which is emitted via the logger ``Application.log``. For more
+  information about these, refer to their respective traits' ``.help``.
+
+* ``.show_config``, ``.show_config_json``: Configurable boolean options, which if set to ``True``,
+  will cause the application to print the config to stdout instead of calling
+  :meth:`Application.start()`
+
+Additionally, the following are set by :class:`~traitlets.config.Application`:
+
+* ``.cli_config``: The :class:`~traitlets.config.Config` created from the command-line arguments.
+  This is saved to override any config values loaded from configuration files called by
+  :meth:`Application.load_config_file()`.
+
+* ``.extra_args``: This is a list holding any positional arguments remaining from
+  the command-line arguments parsed during :meth:`Application.initialize()`.
+  As noted earlier, these must be contiguous in the command-line.
 
 
 .. _cli_strings:
@@ -496,13 +718,15 @@ but does not any more with traitlets 5, please `let us know <https://github.com/
 Custom traits
 *************
 
-.. versionadded: 5.0
+.. versionadded:: 5.0
 
 Custom trait types can override :meth:`~.TraitType.from_string`
 to specify how strings should be interpreted.
 This could for example allow specifying hex-encoded bytes on the command-line:
 
-.. sourcecode:: python
+.. code-block:: python
+    :caption: examples/docs/from_string.py
+    :emphasize-lines: 6,7
 
     from binascii import a2b_hex
     from traitlets.config import Application
@@ -515,7 +739,6 @@ This could for example allow specifying hex-encoded bytes on the command-line:
 
 
     class App(Application):
-
         aliases = {"key": "App.key"}
         key = HexBytes(
             help="""
@@ -523,7 +746,7 @@ This could for example allow specifying hex-encoded bytes on the command-line:
 
             Specify as hex on the command-line.
             """,
-            config=True
+            config=True,
         )
 
         def start(self):
@@ -533,9 +756,9 @@ This could for example allow specifying hex-encoded bytes on the command-line:
     if __name__ == "__main__":
         App.launch_instance()
 
-::
+.. code-block:: bash
 
-    $ myprogram --key=a1b2
+    $ examples/docs/from_string.py --key=a1b2
     key=b'\xa2\xb2'
 
 
@@ -549,7 +772,7 @@ by passing the key multiple times, e.g.::
 
 to produce the list ``["a", "b"]``
 
-or for dictionaries use `key=value`::
+or for dictionaries use ``key=value``::
 
     myprogram -d a=5 -d b=10
 
@@ -570,14 +793,14 @@ but the new way allows container items to be specified by passing the argument m
 
 This handling is good enough that we can recommend defining aliases for container traits for the first time! For example:
 
-.. sourcecode:: python
+.. code-block:: python
+    :caption: examples/docs/container.py
 
     from traitlets.config import Application
-    from traitlets import List, Dict, Integer, Unicode
+    from traitlets import Dict, Integer, List, Unicode
 
 
     class App(Application):
-
         aliases = {"x": "App.x", "y": "App.y"}
         x = List(Unicode(), config=True)
         y = Dict(Integer(), config=True)
@@ -590,9 +813,11 @@ This handling is good enough that we can recommend defining aliases for containe
     if __name__ == "__main__":
         App.launch_instance()
 
-produces::
+produces:
 
-    $ myprogram -x a -x b -y a=10 -y b=5
+.. code-block:: bash
+
+    $ examples/docs/container.py -x a -x b -y a=10 -y b=5
     x=['a', 'b']
     y={'a': 10, 'b': 5}
 
@@ -607,7 +832,7 @@ specified on the command-line and is responsible for turning the list of strings
 into the appropriate type.
 Each item is then passed to :meth:`.List.item_from_string` which is responsible
 for handling the item,
-such as casting to integer or parsing `key=value` in the case of a Dict.
+such as casting to integer or parsing ``key=value`` in the case of a Dict.
 
 The deprecated :py:func:`ast.literal_eval` handling is preserved for backward-compatibility
 in the event of a single item that 'looks like' a list or dict literal.
@@ -616,7 +841,7 @@ If you would prefer, you can also use custom container traits
 which define :meth`~.TraitType.from_string` to expand a single string into a list,
 for example:
 
-.. sourcecode::
+.. code-block:: python
 
     class PathList(List):
         def from_string(self, s):
@@ -628,6 +853,97 @@ which would allow::
 
 to set a ``PathList`` trait with ``["/bin", "/usr/local/bin", "/opt/bin"]``.
 
+
+.. _argcomplete:
+
+Command-line tab completion with ``argcomplete``
+------------------------------------------------
+
+.. versionadded:: 5.8
+
+``traitlets`` has limited support for command-line tab completion for scripts
+based on :class:`~traitlets.config.Application` using
+`argcomplete <https://github.com/kislyuk/argcomplete>`__. To use this,
+follow the instructions for setting up argcomplete;
+you will likely want to
+`activate global completion <https://github.com/kislyuk/argcomplete#activating-global-completion>`__
+by doing something alone the lines of:
+
+.. code-block:: bash
+
+    # pip install argcomplete
+    mkdir -p ~/.bash_completion.d/
+    activate-global-python-argcomplete --dest=~/.bash_completion.d/argcomplete
+    # source ~/.bash_completion.d/argcomplete from your ~/.bashrc
+
+(Follow relevant instructions for your shell.) For any script you want tab-completion
+to work on, include the line:
+
+.. code-block:: python
+
+    # PYTHON_ARGCOMPLETE_OK
+
+in the first 1024 bytes of the script.
+
+The following options can be tab-completed:
+
+* Flags and aliases
+
+* The classes in ``Application.classes``, which can be initially completed as ``--Class.``
+
+  * Once a completion is narrows to a single class, the individual ``config`` traits
+    of the class will be tab-completable, as ``--Class.trait``.
+
+* The available values for :class:`traitlets.Bool` and :class:`traitlets.Enum` will be completable,
+  as well as any other custom :class:`traitlets.TraitType` which defines a ``argcompleter()`` method
+  returning a list of available string completions.
+
+* Custom completer methods can be assigned to a trait by tagging an ``argcompleter`` metadata tag.
+  Refer to `argcomplete's documentation <https://github.com/kislyuk/argcomplete#specifying-completers>`__
+  for examples of creating custom completer methods.
+
+Detailed examples of these can be found in the docstring of
+`examples/argcomplete_app.py <https://github.com/ipython/traitlets/blob/main/examples/argcomplete_app.py>`__.
+
+
+Caveats with ``argcomplete`` handling
+*************************************
+
+The support for ``argcomplete`` is still relatively new and may not work with all ways in
+which an :class:`~traitlets.config.Application` is used. Some known caveats:
+
+* ``argcomplete`` is called when any ``Application`` first constructs and uses a
+  :class:`~traitlets.config.KVArgParseConfigLoader` instance, which constructs
+  a ``argparse.ArgumentParser`` instance.
+  We assume that this is usually first done in scripts when parsing the command-line arguments,
+  but technically a script can first call ``Application.initialize(["other", "args"])`` for
+  some other reason.
+
+* ``traitlets`` does not actually add ``"--Class.trait"`` options to the ``ArgumentParser``,
+  but instead directly parses them from ``argv``. In order to complete these, a custom
+  :class:`~traitlets.config.argcomplete_config.CompletionFinder` is subclassed from
+  ``argcomplete.CompletionFinder``, which dynamically inserts the ``"--Class.""`` and ``"--Class.trait"``
+  completions when it thinks suitable. However, this handling may be a bit fragile.
+
+* Because ``traitlets`` initializes configs from ``argv`` and not from ``ArgumentParser``, it may be
+  more difficult to write custom completers which dynamically provide completions based on the
+  state of other parsed arguments.
+
+* Subcommand handling is especially tricky. ``argcomplete`` libraries' strategy is to call the python script
+  with no arguments e.g. ``len(sys.argv) == 1``, run until ``argcomplete`` is called on an ``ArgumentParser``
+  and determine what completions are available. On the other hand, the ``traitlet``  subcommand-handling
+  strategy is to check ``sys.argv[1]`` and see if it matches a subcommand, and if so then dynamically
+  load the subcommand app and initialize it with ``sys.argv[1:]``. To reconcile these two different
+  approaches, some hacking was done to get ``traitlets`` to recognize the current command-line as seen
+  by ``argcomplete``, and to get ``argcomplete`` to start parsing command-line arguments after subcommands
+  have been evaluated.
+
+  * Currently, completing subcommands themselves is not yet supported.
+
+  * Some applications like ``Jupyter`` have custom ways of constructing subcommands or parsing ``argv``
+    which complicates matters even further.
+
+More details about these caveats can be found in the `original pull request <https://github.com/ipython/traitlets/pull/811>`__.
 
 
 Design requirements

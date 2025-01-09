@@ -5,6 +5,5 @@ Abstract: Sphinx documentation for Traitlets
 Section: Programming/Python
 
 Format: HTML
-Index: /usr/share/doc/python-traitlets-doc/html/index.html
-Files: /usr/share/doc/python-traitlets-doc/html/*
-
+Index: /usr/share/doc/python3-traitlets/html/index.html
+Files: /usr/share/doc/python3-traitlets/html/*
